@@ -7,11 +7,14 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -79,31 +82,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
+        public ImageView mImageCover;
+        public TextView mVideoInfo;
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
+            mImageCover = itemView.findViewById(R.id.iv_image_cover);
+            mVideoInfo = itemView.findViewById(R.id.tv_feed_info);
         }
     }
 
     private void initRecyclerView() {
         mRv = findViewById(R.id.rv);
-        mRv.setLayoutManager(new LinearLayoutManager(this));
+        mRv.setLayoutManager(new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL));
         mRv.setAdapter(new RecyclerView.Adapter() {
             @NonNull @Override
             public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-                ImageView imageView = new ImageView(viewGroup.getContext());
-                imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                imageView.setAdjustViewBounds(true);
-                return new MainActivity.MyViewHolder(imageView);
+                View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_feed,viewGroup,false);
+                return new MainActivity.MyViewHolder(view);
             }
 
             @Override
             public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, final int i) {
-                ImageView iv = (ImageView) viewHolder.itemView;
+                ImageView iv = ((MyViewHolder) viewHolder).mImageCover;
 
                 String url = mFeeds.get(i).videoUrl;
+                String videoInfo = mFeeds.get(i).studentId + "\n" + mFeeds.get(i).userName ;
 
                 Glide.with(iv.getContext()).load(url).into(iv);
-
+                ((MyViewHolder) viewHolder).mVideoInfo.setText(videoInfo);
 
                 iv.setOnClickListener(new View.OnClickListener() {
                     @Override
