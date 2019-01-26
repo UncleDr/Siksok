@@ -1,6 +1,7 @@
 package cn.edu.bit.helong.siksok;
 
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -25,6 +26,7 @@ import java.util.List;
 import cn.edu.bit.helong.siksok.bean.Feed;
 import cn.edu.bit.helong.siksok.bean.FeedResponse;
 import cn.edu.bit.helong.siksok.bean.PostVideoResponse;
+import cn.edu.bit.helong.siksok.db.FavoritesDbHelper;
 import cn.edu.bit.helong.siksok.newtork.IMiniDouyinService;
 import cn.edu.bit.helong.siksok.newtork.RetrofitManager;
 import cn.edu.bit.helong.siksok.utils.ResourceUtils;
@@ -38,7 +40,7 @@ import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
 
-
+    private static final int FIRST_DB_VERSION = 1;
     private static final int PICK_IMAGE = 1;
     private static final int PICK_VIDEO = 2;
     private static final String TAG = "Solution2C2Activity";
@@ -48,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private Uri mSelectedVideo;
     public Button mBtn;
     private Button mBtnRefresh;
+    public SQLiteDatabase favoritesDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +58,20 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initRecyclerView();
         initBtns();
+        initDateBase();
+
+
+        /*实现双击点赞功能*/
+//        mRv.getAdapter().ListItemClickListener
+//                MyAdapter.ListItemClickListener listener = new MyAdapter.ListItemClickListener() {
+//            @Override
+//            public void onListItemClick(int clickedItemIndex) {
+//                Intent intent = new Intent();
+//                intent.setClass(Exercises3.this,Chatroom.class);
+//                startActivity(intent);
+//            }
+//        };
+//        myAdapter.setListItemClickListener(listener);
     }
 
     private void initBtns() {
@@ -81,53 +98,15 @@ public class MainActivity extends AppCompatActivity {
         mBtnRefresh = findViewById(R.id.btn_refresh);
     }
 
-    public static class MyViewHolder extends RecyclerView.ViewHolder {
-        public ImageView mImageCover;
-        public TextView mVideoInfo;
-        public MyViewHolder(@NonNull View itemView) {
-            super(itemView);
-            mImageCover = itemView.findViewById(R.id.iv_image_cover);
-            mVideoInfo = itemView.findViewById(R.id.tv_feed_info);
-        }
-    }
+
 
     private void initRecyclerView() {
         mRv = findViewById(R.id.rv);
-        mRv.setLayoutManager(new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL));
-        mRv.setAdapter(new RecyclerView.Adapter() {
-            @NonNull @Override
-            public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-                View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_feed,viewGroup,false);
-                return new MainActivity.MyViewHolder(view);
-            }
-
-            @Override
-            public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, final int i) {
-                ImageView iv = ((MyViewHolder) viewHolder).mImageCover;
-
-                String url = mFeeds.get(i).videoUrl;
-                String videoInfo = mFeeds.get(i).studentId + "\n" + mFeeds.get(i).userName ;
-
-                Glide.with(iv.getContext()).load(url).into(iv);
-                ((MyViewHolder) viewHolder).mVideoInfo.setText(videoInfo);
-
-                iv.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-
-                        Intent intent = new Intent(MainActivity.this, DetailPlayerActivity.class);
-                        intent.putExtra("videoUrl", mFeeds.get(i).videoUrl);
-                        startActivity(intent);
-                    }
-                });
-
-
-            }
-
-            @Override public int getItemCount() {
-                return mFeeds.size();
-            }
-        });
+        StaggeredGridLayoutManager manager = new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL);
+        manager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
+        mRv.setLayoutManager(manager);
+        MyAdapter myAdapter = new MyAdapter(MainActivity.this);
+        mRv.setAdapter(myAdapter);
     }
 
     public void chooseImage() {
@@ -207,7 +186,10 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(Call<FeedResponse> call, Response<FeedResponse> response) {
                         mFeeds = response.body().feeds;
-                        mRv.getAdapter().notifyDataSetChanged();
+                        for (int i = 0; i < mFeeds.size(); i ++) {
+                            ((MyAdapter)mRv.getAdapter()).insertFeed(mFeeds.get(i));
+                            mRv.getAdapter().notifyItemInserted(i);
+                        }
                         resetRefreshBtn();
                     }
 
@@ -223,5 +205,10 @@ public class MainActivity extends AppCompatActivity {
     private void resetRefreshBtn() {
         mBtnRefresh.setText(R.string.refresh_feed);
         mBtnRefresh.setEnabled(true);
+    }
+
+    private void initDateBase() {
+        FavoritesDbHelper favoritesDbHelper = new FavoritesDbHelper(MainActivity.this, FIRST_DB_VERSION);
+        favoritesDatabase = favoritesDbHelper.getReadableDatabase();
     }
 }

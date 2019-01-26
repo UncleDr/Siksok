@@ -2,6 +2,7 @@ package cn.edu.bit.helong.siksok;
 
 
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -15,11 +16,9 @@ import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
  * @author tianye.xy@bytedance.com
  * 2019/1/9
  */
-public class DetailPlayerActivity extends GSYBaseActivityDetail<StandardGSYVideoPlayer> {
+public class DetailPlayerActivity extends AppCompatActivity {
     StandardGSYVideoPlayer detailPlayer;
-
-    private String url = "https://res.exexm.com/cw_145225549855002";
-
+    String url;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,50 +26,13 @@ public class DetailPlayerActivity extends GSYBaseActivityDetail<StandardGSYVideo
 
         detailPlayer = (StandardGSYVideoPlayer) findViewById(R.id.detail_player);
         //增加title
-        detailPlayer.getTitleTextView().setVisibility(View.GONE);
-        detailPlayer.getBackButton().setVisibility(View.GONE);
-
         url = getIntent().getExtras().getString("videoUrl");
 
-        initVideoBuilderMode();
-
-    }
-
-    @Override
-    public StandardGSYVideoPlayer getGSYVideoPlayer() {
-        return detailPlayer;
-    }
-
-    @Override
-    public GSYVideoOptionBuilder getGSYVideoOptionBuilder() {
-        //内置封面可参考SampleCoverVideo
-        ImageView imageView = new ImageView(this);
-        //loadCover(imageView, url);
-        return new GSYVideoOptionBuilder()
-                .setThumbImageView(imageView)
-                .setUrl(url)
-                .setCacheWithPlay(true)
-                .setVideoTitle(" ")
-                .setIsTouchWiget(true)
-                .setRotateViewAuto(false)
-                .setLockLand(false)
-                .setShowFullAnimation(false)//打开动画
-                .setNeedLockFull(true)
-                .setSeekRatio(1);
-    }
-
-    @Override
-    public void clickForFullScreen() {
-
-    }
-
-
-    /**
-     * 是否启动旋转横屏，true表示启动
-     */
-    @Override
-    public boolean getDetailOrientationRotateAuto() {
-        return true;
+        detailPlayer.setUp(url, true, " ");
+        detailPlayer.getTitleTextView().setVisibility(View.GONE);
+        detailPlayer.setLooping(true);
+        detailPlayer.setIsTouchWiget(false);
+        detailPlayer.startPlayLogic();
     }
 
     private void loadCover(ImageView imageView, String url) {
