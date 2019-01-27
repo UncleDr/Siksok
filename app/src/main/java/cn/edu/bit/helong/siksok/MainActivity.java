@@ -1,24 +1,18 @@
 package cn.edu.bit.helong.siksok;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +20,7 @@ import java.util.List;
 import cn.edu.bit.helong.siksok.bean.Feed;
 import cn.edu.bit.helong.siksok.bean.FeedResponse;
 import cn.edu.bit.helong.siksok.bean.PostVideoResponse;
+import cn.edu.bit.helong.siksok.db.FavoritesContract;
 import cn.edu.bit.helong.siksok.db.FavoritesDbHelper;
 import cn.edu.bit.helong.siksok.newtork.IMiniDouyinService;
 import cn.edu.bit.helong.siksok.newtork.RetrofitManager;
@@ -37,6 +32,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+
+import static android.widget.Toast.LENGTH_LONG;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -63,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
         /*实现双击点赞功能*/
 //        mRv.getAdapter().ListItemClickListener
-//                MyAdapter.ListItemClickListener listener = new MyAdapter.ListItemClickListener() {
+//                FeedsAdapter.ListItemClickListener listener = new FeedsAdapter.ListItemClickListener() {
 //            @Override
 //            public void onListItemClick(int clickedItemIndex) {
 //                Intent intent = new Intent();
@@ -105,8 +102,32 @@ public class MainActivity extends AppCompatActivity {
         StaggeredGridLayoutManager manager = new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL);
         manager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
         mRv.setLayoutManager(manager);
-        MyAdapter myAdapter = new MyAdapter(MainActivity.this);
-        mRv.setAdapter(myAdapter);
+        FeedsAdapter feedsAdapter = new FeedsAdapter(MainActivity.this);
+        feedsAdapter.setAddToFavoritesListener(new FeedsAdapter.AddToFavoritesListener() {
+            @Override
+            public void SpecialEffect() {
+
+            }
+
+            @Override
+            public boolean AddToDB(Feed feed) {
+                try{
+                    ContentValues values = new ContentValues();
+                    values.put(FavoritesContract.FeedEntry.COLUMN_NAME_NAME, feed.userName);
+                    values.put(FavoritesContract.FeedEntry.COLUMN_NAME_NO, feed.studentId);
+                    values.put(FavoritesContract.FeedEntry.COLUMN_NAME_URL_IMAGE, feed.imageUrl);
+                    values.put(FavoritesContract.FeedEntry.COLUMN_NAME_URL_VIDEO, feed.videoUrl);
+                    long newRowId = favoritesDatabase.insert(FavoritesContract.FeedEntry.TABLE_NAME, null, values);
+
+                    Log.i("addtodb", "comein");
+                }catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
+                }
+                return true;
+            }
+        });
+        mRv.setAdapter(feedsAdapter);
     }
 
     public void chooseImage() {
@@ -168,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onFailure(Call<PostVideoResponse> call, Throwable throwable) {
-                        Toast.makeText(MainActivity.this,throwable.getMessage(),Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this,throwable.getMessage(),LENGTH_LONG).show();
 
                     }
                 });
@@ -187,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onResponse(Call<FeedResponse> call, Response<FeedResponse> response) {
                         mFeeds = response.body().feeds;
                         for (int i = 0; i < mFeeds.size(); i ++) {
-                            ((MyAdapter)mRv.getAdapter()).insertFeed(mFeeds.get(i));
+                            ((FeedsAdapter)mRv.getAdapter()).insertFeed(mFeeds.get(i));
                             mRv.getAdapter().notifyItemInserted(i);
                         }
                         resetRefreshBtn();
@@ -209,6 +230,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void initDateBase() {
         FavoritesDbHelper favoritesDbHelper = new FavoritesDbHelper(MainActivity.this, FIRST_DB_VERSION);
-        favoritesDatabase = favoritesDbHelper.getReadableDatabase();
+        favoritesDatabase = favoritesDbHelper.getWritableDatabase();
+    }
+
+    public void enterFavorites(View view) {
+        Intent intent = new Intent();
+        intent.setClass(this, FavoritesActivity.class);
+        startActivity(intent);
     }
 }

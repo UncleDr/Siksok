@@ -2,16 +2,11 @@ package cn.edu.bit.helong.siksok.views;
 
 
 import android.content.Context;
-import android.media.Image;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ImageView;
-
-import cn.edu.bit.helong.siksok.MyAdapter;
 
 public class DoubleClickImageView extends AppCompatImageView {
 

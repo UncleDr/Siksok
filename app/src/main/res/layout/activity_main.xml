@@ -31,6 +31,16 @@
             android:onClick="fetchFeed"
             android:text="@string/refresh_feed"
             />
+
+        <Button
+            android:id="@+id/btn_favorites"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="16dp"
+            android:layout_weight="1"
+            android:onClick="enterFavorites"
+            android:text="FAVORITES"
+            />
     </LinearLayout>
 
     <android.support.v7.widget.RecyclerView

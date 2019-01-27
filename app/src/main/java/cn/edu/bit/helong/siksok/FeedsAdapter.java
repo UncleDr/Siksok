@@ -2,12 +2,12 @@ package cn.edu.bit.helong.siksok;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,13 +20,16 @@ import java.util.List;
 import cn.edu.bit.helong.siksok.bean.Feed;
 import cn.edu.bit.helong.siksok.views.DoubleClickImageView;
 
-public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
+public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder> {
 //
 //    ListItemClickListener listener;
     List<Feed> mFeeds = new ArrayList<>();
     Context mContext;
-//
-     MyAdapter(Context context) {
+    public SQLiteDatabase favoritesDatabase;
+    public AddToFavoritesListener addToFavoritesListener;
+
+    //
+     FeedsAdapter(Context context) {
         //mOnClickListener = listener;
         //List<Message> data,
         mContext = context;
@@ -57,12 +60,12 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         Glide.with(iv.getContext()).load(imageurl).into(iv);
         ((MyViewHolder) viewHolder).mVideoInfo.setText(videoInfo);
 
-
         iv.setOnDoubleClickListener(new DoubleClickImageView.DoubleClickListener (){
             @Override
             public void onDoubleClick (View view){
                 Toast.makeText(mContext, "asd",Toast.LENGTH_SHORT).show();
-
+                addToFavoritesListener.SpecialEffect();
+                addToFavoritesListener.AddToDB(mFeeds.get(i));
             }
 
             @Override
@@ -75,7 +78,14 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         });
     }
 
+    public interface AddToFavoritesListener {
+         void SpecialEffect();
+         boolean AddToDB(Feed feed);
+    }
 
+    public void setAddToFavoritesListener(FeedsAdapter.AddToFavoritesListener listener ){
+        addToFavoritesListener = listener;
+    }
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         public ImageView mImageCover;
@@ -121,7 +131,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 //    }
 //
 //
-//    public void setListItemClickListener(MyAdapter.ListItemClickListener listener) {
+//    public void setListItemClickListener(FeedsAdapter.ListItemClickListener listener) {
 //        this.listener = listener;
 //    }
 
