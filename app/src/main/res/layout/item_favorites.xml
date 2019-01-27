@@ -13,9 +13,10 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toTopOf="@+id/tv_brief_info"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@color/exo_edit_mode_background_color"
-        tools:layout_editor_absoluteX="131dp" />
+        app:srcCompat="@color/exo_edit_mode_background_color" />
 
     <TextView
         android:id="@+id/tv_brief_info"

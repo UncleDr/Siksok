@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,12 +14,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import cn.edu.bit.helong.siksok.bean.Feed;
 import cn.edu.bit.helong.siksok.views.DoubleClickImageView;
+import cn.edu.bit.helong.siksok.views.OnViewPagerListener;
 
 public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder> {
 //
@@ -56,8 +59,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
         String videoInfo = mFeeds.get(i).studentId + "\n" + mFeeds.get(i).userName ;
         String imageurl = mFeeds.get(i).imageUrl;
 
-
-        Glide.with(iv.getContext()).load(imageurl).into(iv);
+//        Glide.with(iv.getContext()).load(imageurl).into(iv);
         ((MyViewHolder) viewHolder).mVideoInfo.setText(videoInfo);
 
         iv.setOnDoubleClickListener(new DoubleClickImageView.DoubleClickListener (){
@@ -70,12 +72,16 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
 
             @Override
             public void onSingleClick(View view) {
-                Intent intent = new Intent(mContext, DetailPlayerActivity.class);
-                intent.putExtra("videoUrl", videourl);
-                mContext.startActivity(intent);
+//                Intent intent = new Intent(mContext, DetailPlayerActivity.class);
+//                intent.putExtra("videoUrl", videourl);
+//                mContext.startActivity(intent);
             }
 
         });
+
+        Log.i(MainActivity.class.getSimpleName(), "bind " + i);
+
+        viewHolder.detailPlayer.setUp(videourl, true, "");
     }
 
     public interface AddToFavoritesListener {
@@ -90,10 +96,16 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         public ImageView mImageCover;
         public TextView mVideoInfo;
+        public StandardGSYVideoPlayer detailPlayer;
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             mImageCover = itemView.findViewById(R.id.iv_image_cover);
             mVideoInfo = itemView.findViewById(R.id.tv_feed_info);
+            detailPlayer = itemView.findViewById(R.id.detail_player);
+
+            detailPlayer.getTitleTextView().setVisibility(View.GONE);
+            detailPlayer.setLooping(true);
+            detailPlayer.setIsTouchWiget(false);
         }
     }
 

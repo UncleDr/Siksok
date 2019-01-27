@@ -1,17 +1,18 @@
 package cn.edu.bit.helong.siksok;
 
-import android.Manifest;
+
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.hardware.Camera;
 import android.hardware.camera2.*;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
+
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -32,7 +33,10 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import com.shuyu.gsyvideoplayer.video.base.GSYVideoPlayer;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -42,13 +46,24 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import cn.edu.bit.helong.siksok.bean.PostVideoResponse;
+import cn.edu.bit.helong.siksok.newtork.IMiniDouyinService;
+import cn.edu.bit.helong.siksok.newtork.RetrofitManager;
 import cn.edu.bit.helong.siksok.utils.AutoFocusCallback;
+import cn.edu.bit.helong.siksok.utils.UriUtils;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
+import static android.widget.Toast.LENGTH_LONG;
 import static cn.edu.bit.helong.siksok.utils.Utils.MEDIA_TYPE_IMAGE;
 import static cn.edu.bit.helong.siksok.utils.Utils.MEDIA_TYPE_VIDEO;
 import static cn.edu.bit.helong.siksok.utils.Utils.getOutputMediaFile;
 
-public class CustomCameraActivity extends AppCompatActivity implements SurfaceHolder.Callback {
+public class CustomCameraActivity extends AppCompatActivity  implements SurfaceHolder.Callback{
 
     private SurfaceView mSurfaceView;
     private Camera mCamera;
@@ -67,14 +82,13 @@ public class CustomCameraActivity extends AppCompatActivity implements SurfaceHo
     private int nowCameraFacing;
 
     public Button btnRecord;
+    public ProgressBar barPosting;
 
     CountDownTimer cdt;
 
     float nowY = 0, lastY = 0;
 
     int SCROLL_UP = 0, SCROLL_STILL = 1, SCROLL_DOWN = 2;
-    private static final int MSG_AUTOFUCS = 1001;
-
 
     Camera.Parameters cameraParameters = null;
 
@@ -90,6 +104,7 @@ public class CustomCameraActivity extends AppCompatActivity implements SurfaceHo
         mSurfaceView = findViewById(R.id.img);
 //        mCamera = getCamera(CAMERA_TYPE);
         nowCameraFacing = Camera.CameraInfo.CAMERA_FACING_BACK;
+        barPosting = findViewById(R.id.bar_posting);
 
 
         SurfaceHolder surfaceHolder = mSurfaceView.getHolder();
@@ -120,16 +135,13 @@ public class CustomCameraActivity extends AppCompatActivity implements SurfaceHo
             }
         });
 
-        findViewById(R.id.btn_picture).setOnClickListener(v -> {
-
-            mCamera.takePicture(null,null,mPicture);
-        });
 
         btnRecord = findViewById(R.id.btn_record);
         btnRecord.setOnClickListener(v -> {
 
             if (isRecording) {
                 releaseMediaRecorder();
+                editVideo(myLatestVideo);
 
             } else {
                 mMediaRecorder = new MediaRecorder();//如果显示'this' is not available 则可能是在外部类中不可达的意思
@@ -187,21 +199,6 @@ public class CustomCameraActivity extends AppCompatActivity implements SurfaceHo
             }
         });
 
-        findViewById(R.id.btn_zoom).setOnClickListener(v -> {
-            if(mCamera!=null) {
-                Camera.Parameters parameter = mCamera.getParameters();
-
-                if (parameter.isZoomSupported()) {
-                    int MAX_ZOOM = parameter.getMaxZoom();
-                    int currnetZoom = parameter.getZoom();
-                    if (currnetZoom <= MAX_ZOOM) {
-                        parameter.setZoom(++currnetZoom);
-                        mCamera.setParameters(parameter);
-                    }
-                } else
-                    Toast.makeText(this, "Zoom Not Avaliable", Toast.LENGTH_LONG).show();
-            }
-        });
 
         mSurfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -242,10 +239,6 @@ public class CustomCameraActivity extends AppCompatActivity implements SurfaceHo
                 return true;
             }
         });
-
-
-
-
     }
 
 
@@ -280,23 +273,6 @@ public class CustomCameraActivity extends AppCompatActivity implements SurfaceHo
             mCamera.setParameters(parameters); // 一定要记得把相应参数设置给相机
             mCamera.autoFocus(new AutoFocusCallback());
         }
-    }
-
-
-
-    public void StoreToAlbum() {
-        //scanFile(CustomCameraActivity.this, filePath);
-        try{
-            MediaStore.Images.Media.insertImage(getContentResolver(),BitmapFactory.decodeFile(myLatestImage.getAbsolutePath().toString()),myLatestImage.getName(),null);
-            Uri contentUri = Uri.fromFile(new File(myLatestImage.getAbsoluteFile().toString()));
-
-            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-            mediaScanIntent.setData(contentUri);
-            sendBroadcast(mediaScanIntent);
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-
     }
 
 
@@ -385,21 +361,6 @@ public class CustomCameraActivity extends AppCompatActivity implements SurfaceHo
         mCamera.lock();//Re-locks the camera to prevent other processes from accessing it.
         isRecording = false;
     }
-
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        startPreview(holder);
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        //todo 释放Camera和MediaRecorder资源
-    }
-
 
     private Camera.PictureCallback mPicture = (data, camera) -> {
         File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
@@ -494,29 +455,6 @@ public class CustomCameraActivity extends AppCompatActivity implements SurfaceHo
         }
     }
 
-    private static Rect calculateTapArea(float x, float y, float coefficient, int width, int height) {
-        float focusAreaSize = 300;
-        int areaSize = Float.valueOf(focusAreaSize * coefficient).intValue();
-        int centerX = (int) (x / width * 2000 - 1000);
-        int centerY = (int) (y / height * 2000 - 1000);
-
-        int halfAreaSize = areaSize / 2;
-        RectF rectF = new RectF(clamp(centerX - halfAreaSize, -1000, 1000)
-                , clamp(centerY - halfAreaSize, -1000, 1000)
-                , clamp(centerX + halfAreaSize, -1000, 1000)
-                , clamp(centerY + halfAreaSize, -1000, 1000));
-        return new Rect(Math.round(rectF.left), Math.round(rectF.top), Math.round(rectF.right), Math.round(rectF.bottom));
-    }
-
-    private static int clamp(int x, int min, int max) {
-        if (x > max) {
-            return max;
-        }
-        if (x < min) {
-            return min;
-        }
-        return x;
-    }
 
 //    private static void handleFocus(MotionEvent event, Camera camera) {
 //        int viewWidth = getWidth();
@@ -546,24 +484,57 @@ public class CustomCameraActivity extends AppCompatActivity implements SurfaceHo
 //        });
 //    }
 
-    //sean owen
-    private static final int AREA_PER_1000 = 400;
-    public static void setFocusArea(Camera.Parameters parameters) {
-        String TAG = "owen's setfocusarea";
-        if (parameters.getMaxNumFocusAreas() > 0) {
-            Log.i(TAG, "Old focus areas: " + (parameters.getFocusAreas()));
-            List<Camera.Area> middleArea = buildMiddleArea(AREA_PER_1000);
-            Log.i(TAG, "Setting focus area to : " + (middleArea));
-            parameters.setFocusAreas(middleArea);
-        } else {
-            Log.i(TAG, "Device does not support focus areas");
-        }
-    }
+
 
     private static List<Camera.Area> buildMiddleArea(int areaPer1000) {
         return Collections.singletonList(
                 new Camera.Area(new Rect(-areaPer1000, -areaPer1000, areaPer1000, areaPer1000), 1));
     }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        startPreview(holder);
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        //todo 释放Camera和MediaRecorder资源
+    }
+
+    public void postVideo() {
+        File tmpImage = new File("/sdcard/DCIM/Camera/IMG_20190127_183651.jpg");
+//        File tmpVideo = new File("/storage/emulated/0/DCIM/Camera/VID_20190127_172830.mp4");
+        Retrofit retrofit = RetrofitManager.get("http://10.108.10.39:8080");
+
+        retrofit.create(IMiniDouyinService.class).postVideo(RequestBody.create(MediaType.get("text/plain"),"1120151026"),
+                RequestBody.create(MediaType.get("text/plain"),"何龙"),
+                new CommonMethod().getMultipartFromUri("cover_image",Uri.fromFile(tmpImage),CustomCameraActivity.this),
+                new CommonMethod().getMultipartFromUri("video",Uri.fromFile(myLatestVideo),CustomCameraActivity.this)).
+                enqueue(new Callback<PostVideoResponse>() {
+                    @Override
+                    public void onResponse(Call<PostVideoResponse> call, Response<PostVideoResponse> response) {
+                        Toast.makeText(CustomCameraActivity.this,"Success " + response.body(),Toast.LENGTH_LONG).show();
+                        CustomCameraActivity.this.finish();
+                    }
+
+                    @Override
+                    public void onFailure(Call<PostVideoResponse> call, Throwable throwable) {
+                        Toast.makeText(CustomCameraActivity.this,throwable.getMessage(),LENGTH_LONG).show();
+                        CustomCameraActivity.this.finish();
+                    }
+                });
+        barPosting.bringToFront();
+        barPosting.setVisibility(View.VISIBLE);
+    }
+
+    public void editVideo(File video) {
+        postVideo();
+    }
+
 }
 
 

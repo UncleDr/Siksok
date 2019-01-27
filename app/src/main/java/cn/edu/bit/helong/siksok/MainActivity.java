@@ -11,12 +11,15 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,6 +33,8 @@ import cn.edu.bit.helong.siksok.db.FavoritesDbHelper;
 import cn.edu.bit.helong.siksok.newtork.IMiniDouyinService;
 import cn.edu.bit.helong.siksok.newtork.RetrofitManager;
 import cn.edu.bit.helong.siksok.utils.ResourceUtils;
+import cn.edu.bit.helong.siksok.views.OnViewPagerListener;
+import cn.edu.bit.helong.siksok.views.ViewPagerLayoutManager;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -45,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int FIRST_DB_VERSION = 1;
     private static final int PICK_IMAGE = 1;
     private static final int PICK_VIDEO = 2;
-    private static final String TAG = "Solution2C2Activity";
+    private static final String TAG = MainActivity.class.getSimpleName();
     private RecyclerView mRv;
     private List<Feed> mFeeds = new ArrayList<>();
     public Uri mSelectedImage;
@@ -109,12 +114,50 @@ public class MainActivity extends AppCompatActivity {
         mBtnRefresh = findViewById(R.id.btn_refresh);
     }
 
+    private void playVideo(int position) {
+        Log.i(TAG, "play video " + position + " rv:" + mRv.getChildCount());
+        StandardGSYVideoPlayer player = mRv.getChildAt(position).findViewById(R.id.detail_player);
+        player.startPlayLogic();
+    }
 
+    private void releaseVideo(int position) {
+        Log.i(TAG, "release video " + position);
+
+        StandardGSYVideoPlayer player = mRv.getChildAt(position).findViewById(R.id.detail_player);
+        player.release();
+    }
 
     private void initRecyclerView() {
         mRv = findViewById(R.id.rv);
-        StaggeredGridLayoutManager manager = new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL);
-        manager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
+        ViewPagerLayoutManager manager = new ViewPagerLayoutManager(this, OrientationHelper.VERTICAL);
+        manager.setOnViewPagerListener(new OnViewPagerListener() {
+            @Override
+            public void onInitComplete() {
+                Log.e(TAG,"onInitComplete");
+                playVideo(0);
+            }
+
+            @Override
+            public void onPageRelease(boolean isNext,int position) {
+                Log.e(TAG,"释放位置:"+position +" 下一页:"+isNext);
+                int index = 0;
+                if (isNext){
+                    index = 0;
+                }else {
+                    index = 1;
+                }
+
+                releaseVideo(index);
+            }
+
+            @Override
+            public void onPageSelected(int position,boolean isBottom) {
+                Log.e(TAG,"选中位置:"+position+"  是否是滑动到底部:"+isBottom);
+
+                playVideo(0);
+            }
+
+        });
         mRv.setLayoutManager(manager);
         FeedsAdapter feedsAdapter = new FeedsAdapter(MainActivity.this);
         feedsAdapter.setAddToFavoritesListener(new FeedsAdapter.AddToFavoritesListener() {
@@ -178,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private MultipartBody.Part getMultipartFromUri(String name, Uri uri) {
+    public MultipartBody.Part getMultipartFromUri(String name, Uri uri) {
         // if NullPointerException thrown, try to allow storage permission in system settings
         File f = new File(ResourceUtils.getRealPath(MainActivity.this, uri));
         RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), f);
