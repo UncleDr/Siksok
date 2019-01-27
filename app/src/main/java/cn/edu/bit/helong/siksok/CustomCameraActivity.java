@@ -164,19 +164,21 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
                     mMediaRecorder.start();
                     isRecording = true;
 
-//                    cdt = new CountDownTimer(RECORD_DURATION_TIME, RECORD_DURATION_TIME) {
-//                        @Override
-//                        public void onTick(long millisUntilFinished) {
-//                            btnRecord.performClick();
-//                            Log.i("perform click","perform click");
-//                        }
-//                        @Override
-//                        public void onFinish() {
-//                            Log.i("total time", "total time is up");
-//                        }
-//                    };
-//
-//                    cdt.start();
+                    cdt = new CountDownTimer(RECORD_DURATION_TIME, 100) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+                            Log.i("perform click","perform click");
+                        }
+                        @Override
+                        public void onFinish() {
+                            Log.i("total time", "total time is up");
+                            if (isRecording) {
+                                btnRecord.performClick();
+                            }
+                        }
+                    };
+
+                    cdt.start();
                 }catch (Exception e){
                     releaseMediaRecorder();
                     e.printStackTrace();
@@ -354,10 +356,12 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
 
 
     private void releaseMediaRecorder() {
-        mMediaRecorder.stop();//stop recording.
-        mMediaRecorder.reset();//Restarts the MediaRecorder to its idle state.
-        mMediaRecorder.release();//Releases resources associated with this MediaRecorder object.
-        mMediaRecorder = null;
+        if (mMediaRecorder != null) {
+            mMediaRecorder.stop();//stop recording.
+            mMediaRecorder.reset();//Restarts the MediaRecorder to its idle state.
+            mMediaRecorder.release();//Releases resources associated with this MediaRecorder object.
+            mMediaRecorder = null;
+        }
         mCamera.lock();//Re-locks the camera to prevent other processes from accessing it.
         isRecording = false;
     }
@@ -506,24 +510,26 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
     }
 
     public void postVideo() {
-        File tmpImage = new File("/sdcard/DCIM/Camera/IMG_20190127_183651.jpg");
+//        File tmpImage = new File("/sdcard/DCIM/Camera/IMG_20190127_183651.jpg");
+        File tmpImage = new File("/storage/emulated/0/DCIM/Camera/IMG_20190122_211543.jpg");
 //        File tmpVideo = new File("/storage/emulated/0/DCIM/Camera/VID_20190127_172830.mp4");
         Retrofit retrofit = RetrofitManager.get("http://10.108.10.39:8080");
 
-        retrofit.create(IMiniDouyinService.class).postVideo(RequestBody.create(MediaType.get("text/plain"),"1120151026"),
-                RequestBody.create(MediaType.get("text/plain"),"何龙"),
-                new CommonMethod().getMultipartFromUri("cover_image",Uri.fromFile(tmpImage),CustomCameraActivity.this),
-                new CommonMethod().getMultipartFromUri("video",Uri.fromFile(myLatestVideo),CustomCameraActivity.this)).
+        retrofit.create(IMiniDouyinService.class).postVideo("1120151026", "何龙",
+                CommonMethod.getMultipartFromUri("cover_image",Uri.fromFile(tmpImage),CustomCameraActivity.this),
+                CommonMethod.getMultipartFromUri("video",Uri.fromFile(myLatestVideo),CustomCameraActivity.this)).
                 enqueue(new Callback<PostVideoResponse>() {
                     @Override
                     public void onResponse(Call<PostVideoResponse> call, Response<PostVideoResponse> response) {
-                        Toast.makeText(CustomCameraActivity.this,"Success " + response.body(),Toast.LENGTH_LONG).show();
+                        Toast.makeText(CustomCameraActivity.this,"Success ",Toast.LENGTH_SHORT).show();
+                        setResult(RESULT_OK);
                         CustomCameraActivity.this.finish();
                     }
 
                     @Override
                     public void onFailure(Call<PostVideoResponse> call, Throwable throwable) {
                         Toast.makeText(CustomCameraActivity.this,throwable.getMessage(),LENGTH_LONG).show();
+                        setResult(RESULT_CANCELED);
                         CustomCameraActivity.this.finish();
                     }
                 });

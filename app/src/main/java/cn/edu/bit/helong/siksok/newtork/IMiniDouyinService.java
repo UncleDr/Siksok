@@ -12,8 +12,8 @@ import retrofit2.http.Part;
 import retrofit2.http.Query;
 
 public interface IMiniDouyinService {
-    @Multipart @POST("minidouyin/video") Call<PostVideoResponse> postVideo(@Part("student_id") RequestBody id,
-                                                                           @Part("user_name") RequestBody name,
+    @Multipart @POST("minidouyin/video") Call<PostVideoResponse> postVideo(@Query("student_id") String id,
+                                                                           @Query("user_name") String name,
                                                                            @Part MultipartBody.Part cover_image,
                                                                            @Part MultipartBody.Part video);
     @GET("minidouyin/feed") Call<FeedResponse> fetchFeed();

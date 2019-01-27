@@ -12,53 +12,36 @@
         android:layout_height="0dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
-    <LinearLayout
-        android:id="@+id/ll"
-        android:layout_width="match_parent"
-        android:layout_height="92dp"
-        android:orientation="horizontal">
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:src="@drawable/ic_star"
+        android:tint="#FFFFFF"
+        android:onClick="enterFavorites"
+        app:layout_constraintBottom_toBottomOf="@+id/rainbow"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/rainbow"
+        app:layout_constraintTop_toTopOf="@+id/rainbow" />
 
-        <Button
-            android:id="@+id/btn"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="16dp"
-            android:layout_weight="1"
-            android:text="@string/select_an_image"
-            />
 
-        <Button
-            android:id="@+id/btn_refresh"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="16dp"
-            android:layout_weight="1"
-            android:onClick="fetchFeed"
-            android:text="@string/refresh_feed"
-            />
-
-        <Button
-            android:id="@+id/btn_favorites"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="16dp"
-            android:layout_weight="1"
-            android:onClick="enterFavorites"
-            android:text="FAVORITES"
-            />
-
-        <Button
-            android:id="@+id/btn_custom_camera"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="16dp"
-            android:layout_weight="1"
-            android:onClick="enterCustomCamera"
-            android:text="start recording"
-            />
-
-    </LinearLayout>
+    <ImageView
+        android:id="@+id/rainbow"
+        android:layout_width="68dp"
+        android:layout_height="68dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="32dp"
+        android:onClick="enterCustomCamera"
+        android:src="@drawable/ic_launcher"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </android.support.constraint.ConstraintLayout>

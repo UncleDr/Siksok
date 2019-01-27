@@ -55,8 +55,6 @@ public class MainActivity extends AppCompatActivity {
     private List<Feed> mFeeds = new ArrayList<>();
     public Uri mSelectedImage;
     private Uri mSelectedVideo;
-    public Button mBtn;
-    private Button mBtnRefresh;
     public SQLiteDatabase favoritesDatabase;
 
     private static String[] PERMISSION_RECORDVIDEO = {
@@ -73,45 +71,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initRecyclerView();
-        initBtns();
         initDateBase();
-
-
-        /*实现双击点赞功能*/
-//        mRv.getAdapter().ListItemClickListener
-//                FeedsAdapter.ListItemClickListener listener = new FeedsAdapter.ListItemClickListener() {
-//            @Override
-//            public void onListItemClick(int clickedItemIndex) {
-//                Intent intent = new Intent();
-//                intent.setClass(Exercises3.this,Chatroom.class);
-//                startActivity(intent);
-//            }
-//        };
-//        myAdapter.setListItemClickListener(listener);
-    }
-
-    private void initBtns() {
-        mBtn = findViewById(R.id.btn);
-        mBtn.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                String s = mBtn.getText().toString();
-                if (getString(R.string.select_an_image).equals(s)) {
-                    chooseImage();
-                } else if (getString(R.string.select_a_video).equals(s)) {
-                    chooseVideo();
-                } else if (getString(R.string.post_it).equals(s)) {
-                    if (mSelectedVideo != null && mSelectedImage != null) {
-                        postVideo();
-                    } else {
-                        throw new IllegalArgumentException("error data uri, mSelectedVideo = " + mSelectedVideo + ", mSelectedImage = " + mSelectedImage);
-                    }
-                } else if ((getString(R.string.success_try_refresh).equals(s))) {
-                    mBtn.setText(R.string.select_an_image);
-                }
-            }
-        });
-
-        mBtnRefresh = findViewById(R.id.btn_refresh);
+        fetchFeed();
     }
 
     private void playVideo(int position) {
@@ -147,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
                     index = 1;
                 }
 
-                releaseVideo(index);
+                releaseVideo(0);
             }
 
             @Override
@@ -207,17 +168,8 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "onActivityResult() called with: requestCode = [" + requestCode + "], resultCode = [" + resultCode + "], data = [" + data + "]");
 
-        if (resultCode == RESULT_OK && null != data) {
-
-            if (requestCode == PICK_IMAGE) {
-                mSelectedImage = data.getData();
-                Log.d(TAG, "selectedImage = " + mSelectedImage);
-                mBtn.setText(R.string.select_a_video);
-            } else if (requestCode == PICK_VIDEO) {
-                mSelectedVideo = data.getData();
-                Log.d(TAG, "mSelectedVideo = " + mSelectedVideo);
-                mBtn.setText(R.string.post_it);
-            }
+        if (resultCode == RESULT_OK && requestCode == RECORD_REQUEST_CODE) {
+            fetchFeed();
         }
     }
 
@@ -228,35 +180,8 @@ public class MainActivity extends AppCompatActivity {
         return MultipartBody.Part.createFormData(name, f.getName(), requestFile);
     }
 
-    private void postVideo() {
-        mBtn.setText("POSTING...");
-        mBtn.setEnabled(false);
 
-        // if success, make a text Toast and show
-        Retrofit retrofit = RetrofitManager.get("http://10.108.10.39:8080");
-
-        retrofit.create(IMiniDouyinService.class).postVideo(RequestBody.create(MediaType.get("text/plain"),"1120151026"),
-                RequestBody.create(MediaType.get("text/plain"),"何龙"),
-                getMultipartFromUri("cover_image",mSelectedImage), getMultipartFromUri("video",mSelectedVideo)).
-                enqueue(new Callback<PostVideoResponse>() {
-                    @Override
-                    public void onResponse(Call<PostVideoResponse> call, Response<PostVideoResponse> response) {
-                        Toast.makeText(MainActivity.this,"Success " + response.body(),Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onFailure(Call<PostVideoResponse> call, Throwable throwable) {
-                        Toast.makeText(MainActivity.this,throwable.getMessage(),LENGTH_LONG).show();
-
-                    }
-                });
-
-    }
-
-    public void fetchFeed(View view) {
-        mBtnRefresh.setText("requesting...");
-        mBtnRefresh.setEnabled(false);
-
+    public void fetchFeed() {
         Retrofit retrofit = RetrofitManager.get("http://10.108.10.39:8080");
 
         retrofit.create(IMiniDouyinService.class).fetchFeed().
@@ -264,25 +189,15 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(Call<FeedResponse> call, Response<FeedResponse> response) {
                         mFeeds = response.body().feeds;
-                        for (int i = 0; i < mFeeds.size(); i ++) {
-                            ((FeedsAdapter)mRv.getAdapter()).insertFeed(mFeeds.get(i));
-                            mRv.getAdapter().notifyItemInserted(i);
-                        }
-                        resetRefreshBtn();
+                        ((FeedsAdapter)mRv.getAdapter()).setFeeds(mFeeds);
+                        mRv.getAdapter().notifyDataSetChanged();
                     }
 
                     @Override
                     public void onFailure(Call<FeedResponse> call, Throwable throwable) {
                         Toast.makeText(MainActivity.this, "fetch failed", Toast.LENGTH_SHORT).show();
-                        resetRefreshBtn();
-
                     }
                 });
-    }
-
-    private void resetRefreshBtn() {
-        mBtnRefresh.setText(R.string.refresh_feed);
-        mBtnRefresh.setEnabled(true);
     }
 
     private void initDateBase() {
@@ -296,14 +211,17 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    public int RECORD_REQUEST_CODE = 1;
+
     public void enterCustomCamera(View view) {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, PERMISSION_RECORDVIDEO, REQUEST_PERMISSION_CODE);
         else{
-            startActivity(new Intent().setClass(this, CustomCameraActivity.class));
+            startActivityForResult(new Intent().setClass(this, CustomCameraActivity.class),RECORD_REQUEST_CODE);
         }
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

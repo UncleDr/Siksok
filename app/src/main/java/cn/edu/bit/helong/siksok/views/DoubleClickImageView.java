@@ -51,7 +51,7 @@ public class DoubleClickImageView extends AppCompatImageView {
 //            Log.d("Double Tap", "Tapped at: (" + x + "," + y + ")");
 //
 //            return true;
-            mListener.onDoubleClick(DoubleClickImageView.this);
+            mListener.onDoubleClick(DoubleClickImageView.this, (int)e.getX(), (int)e.getY());
             return true;
 
         }
@@ -64,7 +64,7 @@ public class DoubleClickImageView extends AppCompatImageView {
     }
 
     public interface DoubleClickListener {
-        void onDoubleClick(View view);
+        void onDoubleClick(View view, int x, int y);
         void onSingleClick(View view);
 
     }

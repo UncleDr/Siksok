@@ -11,7 +11,7 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
 public class CommonMethod {
-    public MultipartBody.Part getMultipartFromUri(String name, Uri uri, Context context) {
+    public static MultipartBody.Part getMultipartFromUri(String name, Uri uri, Context context) {
         // if NullPointerException thrown, try to allow storage permission in system settings
         File f = new File(ResourceUtils.getRealPath(context, uri));
         RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), f);

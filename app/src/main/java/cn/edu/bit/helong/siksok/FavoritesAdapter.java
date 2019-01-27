@@ -1,5 +1,7 @@
 package cn.edu.bit.helong.siksok;
 
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.Image;
@@ -78,7 +80,8 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.Favo
 
     @Override
     public void onBindViewHolder(@NonNull FavoritesViewHolder favoritesViewHolder, int i) {
-        Favorites tmp = favoritesList.get(i);
+        final int position = i;
+        Favorites tmp = favoritesList.get(position);
 
         ImageView iv = favoritesViewHolder.ivLittleImageCover;
         Glide.with(iv.getContext()).load(tmp.getUrlImage()).into(iv);
@@ -87,10 +90,34 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.Favo
 
         tv.setText(tmp.getNo() + "\n" + tmp.getName());
 
+        iv.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setClass(v.getContext(), DetailPlayerActivity.class);
+                intent.putExtra("videoUrl", tmp.getUrlVideo());
+                v.getContext().startActivity(intent);
+            }
+        });
 
+        iv.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                String selection = FavoritesContract.FeedEntry._ID + " = ?";
+                String[] selectionArgs = { String.valueOf(tmp.id) };
+                int deletedRows = mFavoritesDatabase.delete(FavoritesContract.FeedEntry.TABLE_NAME,selection,selectionArgs);
+                notifyItemRemoved(position);
+                return true;
+            }
+        });
     }
 
-
+    public void refresh(List<Favorites> newFavoerites) {
+        favoritesList.clear();
+        if (newFavoerites != null) {
+            favoritesList.addAll(newFavoerites);
+        }
+        notifyDataSetChanged();
+    }
 
 
     @Override

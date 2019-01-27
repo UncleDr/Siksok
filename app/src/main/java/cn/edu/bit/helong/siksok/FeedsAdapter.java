@@ -1,7 +1,7 @@
 package cn.edu.bit.helong.siksok;
 
+import android.animation.Animator;
 import android.content.Context;
-import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -11,9 +11,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
+import com.airbnb.lottie.LottieAnimationView;
 import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
 
 import java.util.ArrayList;
@@ -21,7 +20,6 @@ import java.util.List;
 
 import cn.edu.bit.helong.siksok.bean.Feed;
 import cn.edu.bit.helong.siksok.views.DoubleClickImageView;
-import cn.edu.bit.helong.siksok.views.OnViewPagerListener;
 
 public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder> {
 //
@@ -38,8 +36,8 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
         mContext = context;
     }
 
-    public void insertFeed(@NonNull Feed feed) {
-         mFeeds.add(feed);
+    public void setFeeds(@NonNull List<Feed> feeds) {
+         mFeeds = feeds;
     }
 
     @NonNull @Override
@@ -56,18 +54,42 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
         DoubleClickImageView iv = (DoubleClickImageView)((MyViewHolder)viewHolder).mImageCover;
 
         String videourl = mFeeds.get(i).videoUrl;
-        String videoInfo = mFeeds.get(i).studentId + "\n" + mFeeds.get(i).userName ;
+        String videoInfo = mFeeds.get(i).userName;
         String imageurl = mFeeds.get(i).imageUrl;
 
 //        Glide.with(iv.getContext()).load(imageurl).into(iv);
-        ((MyViewHolder) viewHolder).mVideoInfo.setText(videoInfo);
-
+        ((MyViewHolder) viewHolder).mVideoName.setText(videoInfo);
+        viewHolder.mStudentId.setText(mFeeds.get(i).studentId);
         iv.setOnDoubleClickListener(new DoubleClickImageView.DoubleClickListener (){
             @Override
-            public void onDoubleClick (View view){
-                Toast.makeText(mContext, "asd",Toast.LENGTH_SHORT).show();
+            public void onDoubleClick (View view, int x, int y){
                 addToFavoritesListener.SpecialEffect();
                 addToFavoritesListener.AddToDB(mFeeds.get(i));
+                viewHolder.picClickGood.setVisibility(View.VISIBLE);
+                viewHolder.picClickGood.setX(x - viewHolder.width/2);
+                viewHolder.picClickGood.setY(y - viewHolder.height/2);
+                viewHolder.picClickGood.playAnimation();
+                viewHolder.picClickGood.addAnimatorListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        viewHolder.picClickGood.setVisibility(View.INVISIBLE);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+
+                    }
+                });
             }
 
             @Override
@@ -95,17 +117,29 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         public ImageView mImageCover;
-        public TextView mVideoInfo;
+        public TextView mVideoName;
+        public TextView mStudentId;
         public StandardGSYVideoPlayer detailPlayer;
+        public LottieAnimationView picClickGood;
+        int height, width;
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             mImageCover = itemView.findViewById(R.id.iv_image_cover);
-            mVideoInfo = itemView.findViewById(R.id.tv_feed_info);
+            mVideoName = itemView.findViewById(R.id.tv_feed_name);
+            mStudentId = itemView.findViewById(R.id.tv_feed_id);
+            picClickGood = itemView.findViewById(R.id.pic_click_good);
+            height = picClickGood.getLayoutParams().height;
+            width = picClickGood.getLayoutParams().width;
+
+            picClickGood.setVisibility(View.INVISIBLE);
             detailPlayer = itemView.findViewById(R.id.detail_player);
 
             detailPlayer.getTitleTextView().setVisibility(View.GONE);
             detailPlayer.setLooping(true);
             detailPlayer.setIsTouchWiget(false);
+            detailPlayer.getBackButton().setVisibility(View.GONE);
+            detailPlayer.getStartButton().setVisibility(View.GONE);
+
         }
     }
 

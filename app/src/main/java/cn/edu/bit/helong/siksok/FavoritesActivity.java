@@ -8,6 +8,8 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import cn.edu.bit.helong.siksok.bean.Favorites;
+import cn.edu.bit.helong.siksok.db.FavoritesContract;
 import cn.edu.bit.helong.siksok.db.FavoritesDbHelper;
 
 public class FavoritesActivity extends AppCompatActivity {
@@ -31,13 +33,11 @@ public class FavoritesActivity extends AppCompatActivity {
         favoritesAdapter.setFavoriteClickListener(new FavoritesAdapter.FavoriteClickListener() {
             @Override
             public void onFavoriteClick(View view) {
-                Intent intent = new Intent();
-                intent.setClass(FavoritesActivity.this, DetailPlayerActivity.class);
-                startActivity(intent);
+
             }
         });
         rv.setAdapter(favoritesAdapter);
-
-
     }
+
+
 }
