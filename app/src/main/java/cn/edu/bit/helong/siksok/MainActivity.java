@@ -1,10 +1,15 @@
 package cn.edu.bit.helong.siksok;
 
+import android.Manifest;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
@@ -48,6 +53,15 @@ public class MainActivity extends AppCompatActivity {
     public Button mBtn;
     private Button mBtnRefresh;
     public SQLiteDatabase favoritesDatabase;
+
+    private static String[] PERMISSION_RECORDVIDEO = {
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+    };
+    private static int REQUEST_PERMISSION_CODE = 1;
+
+    private static final int REQUEST_EXTERNAL_CAMERA = 101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -237,5 +251,36 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.setClass(this, FavoritesActivity.class);
         startActivity(intent);
+    }
+
+    public void enterCustomCamera(View view) {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(this, PERMISSION_RECORDVIDEO, REQUEST_PERMISSION_CODE);
+        else{
+            startActivity(new Intent().setClass(this, CustomCameraActivity.class));
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_EXTERNAL_CAMERA: {
+
+                if (grantResults.length > 0 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                        grantResults[1] == PackageManager.PERMISSION_GRANTED &&
+                        grantResults[2] == PackageManager.PERMISSION_GRANTED) {
+                    Log.i("get camera success","Get camera permission success.");
+                    startActivity(new Intent().setClass(this, CustomCameraActivity.class));
+                }
+                else {
+                    Toast.makeText(this, "Get camera permission failed.", Toast.LENGTH_LONG).show();
+                    Log.i("get camera failed","Get camera permission failed.");
+                }
+                break;
+
+            }
+        }
     }
 }
