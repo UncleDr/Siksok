@@ -105,6 +105,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.Favo
                 String selection = FavoritesContract.FeedEntry._ID + " = ?";
                 String[] selectionArgs = { String.valueOf(tmp.id) };
                 int deletedRows = mFavoritesDatabase.delete(FavoritesContract.FeedEntry.TABLE_NAME,selection,selectionArgs);
+                favoritesList.remove(position);
                 notifyItemRemoved(position);
                 return true;
             }

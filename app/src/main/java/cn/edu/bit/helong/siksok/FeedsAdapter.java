@@ -85,7 +85,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
 
                     @Override
                     public void onAnimationCancel(Animator animation) {
-
+                        viewHolder.picClickGood.setVisibility(View.INVISIBLE);
                     }
 
                     @Override
@@ -122,13 +122,12 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
         public ImageView mImageCover;
         public TextView mVideoName;
         public TextView mStudentId;
-        public StandardGSYVideoPlayer detailPlayer;
+        public SiksokVideoPlayer detailPlayer;
         public LottieAnimationView picClickGood;
         int height, width;
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             mImageCover = itemView.findViewById(R.id.iv_image_cover);
-
 
             mVideoName = itemView.findViewById(R.id.tv_feed_name);
             mStudentId = itemView.findViewById(R.id.tv_feed_id);
@@ -139,11 +138,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
             picClickGood.setVisibility(View.INVISIBLE);
             detailPlayer = itemView.findViewById(R.id.detail_player);
 
-            detailPlayer.getTitleTextView().setVisibility(View.GONE);
             detailPlayer.setLooping(true);
-            detailPlayer.setIsTouchWiget(false);
-            detailPlayer.getBackButton().setVisibility(View.GONE);
-            detailPlayer.getStartButton().setVisibility(View.GONE);
 
         }
     }

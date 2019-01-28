@@ -12,7 +12,7 @@ public class FavoritesDbHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "FavoritesContract.db";
 
     public FavoritesDbHelper(Context context, int version) {
-        super(context, "todo", null, DATABASE_VERSION = version);
+        super(context, DATABASE_NAME, null, DATABASE_VERSION = version);
     }
 
     @Override

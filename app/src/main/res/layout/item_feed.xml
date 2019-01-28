@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer
+    <cn.edu.bit.helong.siksok.SiksokVideoPlayer
         android:id="@+id/detail_player"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -29,47 +29,46 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:orientation="vertical"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="48dp"
         android:background="@drawable/round_rect"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp"
+        android:orientation="vertical"
         android:paddingLeft="8dp"
-        android:paddingRight="8dp">
+        android:paddingTop="4dp"
+        android:paddingRight="8dp"
+        android:paddingBottom="4dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
         <TextView
             android:id="@+id/tv_feed_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="21sp"
             android:ellipsize="end"
             android:maxLines="2"
             android:text="@string/detail_text"
             android:textColor="#ffffffff"
-             />
+            android:textSize="21sp" />
 
         <TextView
             android:id="@+id/tv_feed_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#78ffffff"
-            android:text="@string/detail_text"
-            android:maxLines="1"
-            android:ellipsize="end"
             android:layout_marginTop="4dp"
-            android:textSize="16sp"
-            />
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/detail_text"
+            android:textColor="#78ffffff"
+            android:textSize="16sp" />
     </LinearLayout>
 
     <com.airbnb.lottie.LottieAnimationView
         android:id="@+id/pic_click_good"
-        android:layout_width="400dp"
-        android:layout_height="400dp"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:lottie_fileName="favorite_double_click.json" />
+        app:lottie_fileName="star.json" />
 </android.support.constraint.ConstraintLayout>

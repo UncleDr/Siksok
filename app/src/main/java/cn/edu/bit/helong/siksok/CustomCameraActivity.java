@@ -5,11 +5,13 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.hardware.camera2.*;
 import android.media.CamcorderProfile;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
 
@@ -73,7 +75,7 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
     public AutoFocusCallback autoFocusCallback;
     public static Handler handler;
     private int CAMERA_TYPE = Camera.CameraInfo.CAMERA_FACING_BACK;
-    private int RECORD_DURATION_TIME = 4000; //ms
+    private int RECORD_DURATION_TIME = 10000; //ms
     public float RED_DOT_START_ANGLE = (float)(3f/2*Math.PI);
     public float ARC_MID_X = 435 + 210 / 2, ARC_MID_Y = 1606 + 187 / 2,ARC_RADIUS ;
 //    Rect focusRect = calculateTapArea(event.getX(), event.getY(), 1f, viewWidth, viewHeight);
@@ -151,6 +153,8 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
 
             if (isRecording) {
                 releaseMediaRecorder();
+                cdt.cancel();
+
                 editVideo(myLatestVideo);
 
             } else {
@@ -193,7 +197,7 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
                         public void onTick(long millisUntilFinished) {
                             Log.i("perform click","perform click");
 //                            times++;
-//                            if(times == 10){
+                            //if(){
                                 XY = drawCircle((float)millisUntilFinished,ARC_RADIUS, ARC_MID_X, ARC_MID_Y,RECORD_DURATION_TIME,RED_DOT_START_ANGLE);//RED_DOT_START_ANGLE
                                 redDot.setX((float)XY[0] - rRedDot);
                                 redDot.setY((float)XY[1] - rRedDot);
@@ -363,7 +367,7 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
         int result;
         if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
             result = (info.orientation + degrees) % DEGREE_360;
-            result = (DEGREE_360 - result) % DEGREE_360;  // compensate the mirror
+//            result = (DEGREE_360 - result) % DEGREE_360;  // compensate the mirror
         } else {  // back-facing
             result = (info.orientation - degrees + DEGREE_360) % DEGREE_360;
         }
@@ -545,13 +549,17 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
     }
 
     public void postVideo() {
+
+        Bitmap bmp = extractFrame(0);
+        Uri uriBmp = Uri.parse(MediaStore.Images.Media.insertImage(getContentResolver(), bmp, null,null));
+
 //        File tmpImage = new File("/sdcard/DCIM/Camera/IMG_20190127_183651.jpg");
-        File tmpImage = new File("/storage/emulated/0/DCIM/Camera/IMG_20190122_211543.jpg");
+//        File tmpImage = new File("/storage/emulated/0/DCIM/Camera/IMG_20190122_211543.jpg");
 //        File tmpVideo = new File("/storage/emulated/0/DCIM/Camera/VID_20190127_172830.mp4");
         Retrofit retrofit = RetrofitManager.get("http://10.108.10.39:8080");
 
         retrofit.create(IMiniDouyinService.class).postVideo("1120151026", "何龙",
-                CommonMethod.getMultipartFromUri("cover_image",Uri.fromFile(tmpImage),CustomCameraActivity.this),
+                CommonMethod.getMultipartFromUri("cover_image",uriBmp,CustomCameraActivity.this),
                 CommonMethod.getMultipartFromUri("video",Uri.fromFile(myLatestVideo),CustomCameraActivity.this)).
                 enqueue(new Callback<PostVideoResponse>() {
                     @Override
@@ -570,6 +578,33 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
                 });
         barPosting.bringToFront();
         barPosting.setVisibility(View.VISIBLE);
+    }
+
+    public Bitmap extractFrame(long timeMs) {
+        //第一个参数是传入时间，只能是us(微秒)
+        //OPTION_CLOSEST ,在给定的时间，检索最近一个帧,这个帧不一定是关键帧。
+        //OPTION_CLOSEST_SYNC   在给定的时间，检索最近一个同步与数据源相关联的的帧（关键帧）
+        //OPTION_NEXT_SYNC 在给定时间之后检索一个同步与数据源相关联的关键帧。
+        //OPTION_PREVIOUS_SYNC 在给定时间之前检索一个同步与数据源相关联的关键帧。
+
+// Bitmap bitmap = mMetadataRetriever.getFrameAtTime(timeMs * 1000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+        MediaMetadataRetriever mMetadataRetriever = new MediaMetadataRetriever();
+        mMetadataRetriever.setDataSource(myLatestVideo.getAbsolutePath());
+        String w = mMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
+        String h = mMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
+        mMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+
+        long fileLength = 3000;
+
+        Bitmap bitmap = null;
+        for (long i = timeMs; i < fileLength; i += 1000) {
+            bitmap = mMetadataRetriever.getFrameAtTime(i * 1000, MediaMetadataRetriever.OPTION_CLOSEST);//OPTION_CLOSEST_SYNC
+            if (bitmap != null) {
+                break;
+            }
+        }
+        mMetadataRetriever.release();
+        return bitmap;
     }
 
     public void editVideo(File video) {

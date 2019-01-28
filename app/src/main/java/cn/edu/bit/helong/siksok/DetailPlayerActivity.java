@@ -12,19 +12,16 @@ import com.shuyu.gsyvideoplayer.GSYBaseActivityDetail;
 import com.shuyu.gsyvideoplayer.builder.GSYVideoOptionBuilder;
 import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
 
-/**
- * @author tianye.xy@bytedance.com
- * 2019/1/9
- */
+
 public class DetailPlayerActivity extends AppCompatActivity {
-    StandardGSYVideoPlayer detailPlayer;
+    SiksokVideoPlayer detailPlayer;
     String url;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_simple_detail_player);
 
-        detailPlayer = (StandardGSYVideoPlayer) findViewById(R.id.detail_player);
+        detailPlayer = (SiksokVideoPlayer) findViewById(R.id.detail_player);
         //增加title
         url = getIntent().getExtras().getString("videoUrl");
 
