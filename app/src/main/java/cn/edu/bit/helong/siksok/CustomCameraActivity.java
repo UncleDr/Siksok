@@ -221,7 +221,7 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
             }
         });
 
-        findViewById(R.id.btn_facing).setOnClickListener(v -> {
+        findViewById(R.id.img_facing).setOnClickListener(v -> {
             if(CAMERA_TYPE == Camera.CameraInfo.CAMERA_FACING_BACK){
                 mCamera = getCamera(Camera.CameraInfo.CAMERA_FACING_FRONT);
             }
