@@ -44,4 +44,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/circle"
+        android:id="@+id/red_dot"/>
+
 </android.support.constraint.ConstraintLayout>

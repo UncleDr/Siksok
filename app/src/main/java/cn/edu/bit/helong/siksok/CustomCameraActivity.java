@@ -20,6 +20,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MotionEventCompat;
@@ -33,6 +34,8 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -70,7 +73,9 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
     public AutoFocusCallback autoFocusCallback;
     public static Handler handler;
     private int CAMERA_TYPE = Camera.CameraInfo.CAMERA_FACING_BACK;
-    private int RECORD_DURATION_TIME = 10000; //ms
+    private int RECORD_DURATION_TIME = 4000; //ms
+    public float RED_DOT_START_ANGLE = (float)(3f/2*Math.PI);
+    public float ARC_MID_X = 435 + 210 / 2, ARC_MID_Y = 1606 + 187 / 2,ARC_RADIUS ;
 //    Rect focusRect = calculateTapArea(event.getX(), event.getY(), 1f, viewWidth, viewHeight);
 
     private boolean isRecording = false;
@@ -81,7 +86,7 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
 
     private int nowCameraFacing;
 
-    public Button btnRecord;
+    public ImageView imgRecord;
     public ProgressBar barPosting;
 
     CountDownTimer cdt;
@@ -91,6 +96,7 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
     int SCROLL_UP = 0, SCROLL_STILL = 1, SCROLL_DOWN = 2;
 
     Camera.Parameters cameraParameters = null;
+    ImageView redDot ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +111,7 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
 //        mCamera = getCamera(CAMERA_TYPE);
         nowCameraFacing = Camera.CameraInfo.CAMERA_FACING_BACK;
         barPosting = findViewById(R.id.bar_posting);
+        redDot = findViewById(R.id.red_dot);
 
 
         SurfaceHolder surfaceHolder = mSurfaceView.getHolder();
@@ -136,8 +143,11 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
         });
 
 
-        btnRecord = findViewById(R.id.btn_record);
-        btnRecord.setOnClickListener(v -> {
+        imgRecord = findViewById(R.id.img_record);
+        ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) redDot.getLayoutParams();
+        layoutParams.bottomMargin = (int)((imgRecord.getLayoutParams().height / 2f) * (1.3f - 1) - layoutParams.height / 2) ;
+        redDot.setLayoutParams(layoutParams);
+        imgRecord.setOnClickListener(v -> {
 
             if (isRecording) {
                 releaseMediaRecorder();
@@ -164,16 +174,41 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
                     mMediaRecorder.start();
                     isRecording = true;
 
-                    cdt = new CountDownTimer(RECORD_DURATION_TIME, 100) {
+                    //imgRecord的左上角坐标是(435.0,1606.0)
+                    //imgRecord的宽高是(210,187)
+                    redDot.bringToFront();
+                    ARC_MID_X = imgRecord.getX() + imgRecord.getWidth() / 2;
+                    ARC_MID_Y = imgRecord.getY() + imgRecord.getHeight() / 2;
+                    ARC_RADIUS = (imgRecord.getHeight())/ 2f * 1.3f;
+                    float RED_DOT_START_XY[] = calcRedDotStartPos(RED_DOT_START_ANGLE,ARC_MID_X,ARC_MID_Y,ARC_RADIUS);
+                    float rRedDot = redDot.getHeight() / 2;
+                    redDot.setX(RED_DOT_START_XY[0] - rRedDot);
+                    redDot.setY(RED_DOT_START_XY[1] - rRedDot);
+
+
+                    cdt = new CountDownTimer(RECORD_DURATION_TIME, 32) {//interval is 100ms
+                        int times = 0;
+                        float[] XY;
                         @Override
                         public void onTick(long millisUntilFinished) {
                             Log.i("perform click","perform click");
+//                            times++;
+//                            if(times == 10){
+                                XY = drawCircle((float)millisUntilFinished,ARC_RADIUS, ARC_MID_X, ARC_MID_Y,RECORD_DURATION_TIME,RED_DOT_START_ANGLE);//RED_DOT_START_ANGLE
+                                redDot.setX((float)XY[0] - rRedDot);
+                                redDot.setY((float)XY[1] - rRedDot);
+                                redDot.bringToFront();
+                                Log.i("redotxy", "X " + ((float)XY[0] - rRedDot) + "," + "Y " + ((float)XY[1] - rRedDot));
+//                                times = 0;
+//                            }
+
                         }
                         @Override
                         public void onFinish() {
                             Log.i("total time", "total time is up");
                             if (isRecording) {
-                                btnRecord.performClick();
+                                imgRecord.performClick();
+                                Log.i("middlecoordinate", "中心坐标 " + imgRecord.getX() + "," + imgRecord.getY());
                             }
                         }
                     };
@@ -201,7 +236,6 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
             }
         });
 
-
         mSurfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -222,6 +256,7 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
                         else if(judgeDirection(nowY, lastY) == SCROLL_DOWN)
                             zoom(SCROLL_DOWN);
                         lastY = nowY;
+                        //int x = (int )event.getX();
                         Log.d(DEBUG_TAG,"Action was MOVE");
                         return true;
                     case (MotionEvent.ACTION_UP) :
@@ -541,6 +576,22 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
         postVideo();
     }
 
+    public float[] drawCircle(float t, float R, float x, float y, float totalT, float startAngle){
+        float twoPi = (float)Math.PI * 2;
+        float angle =  t/totalT * twoPi + startAngle;
+        float[] coordinate = new float[2];
+        coordinate[0] = (float)(x + R * Math.cos(angle));
+        coordinate[1] = (float)(y - R * Math.sin(twoPi - angle) );
+
+        Log.i("angle", String.valueOf(angle));
+        return coordinate;
+    }
+
+    public float[] calcRedDotStartPos(float startAngle, float midX, float midY, float R) {
+        float[] XY = new float[2];
+        XY[0] = midX + R * (float)Math.cos(startAngle);
+        XY[1] = midY - R * (float)Math.sin(startAngle);
+        return XY;
+    }
+
 }
-
-

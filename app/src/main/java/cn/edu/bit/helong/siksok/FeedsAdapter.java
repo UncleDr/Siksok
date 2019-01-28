@@ -57,6 +57,9 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
         String videoInfo = mFeeds.get(i).userName;
         String imageurl = mFeeds.get(i).imageUrl;
 
+//        int myheight = viewHolder.mImageCover.getLayoutParams().height;
+//        int mywidth = viewHolder.mImageCover.getLayoutParams().width;
+
 //        Glide.with(iv.getContext()).load(imageurl).into(iv);
         ((MyViewHolder) viewHolder).mVideoName.setText(videoInfo);
         viewHolder.mStudentId.setText(mFeeds.get(i).studentId);
@@ -125,6 +128,8 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             mImageCover = itemView.findViewById(R.id.iv_image_cover);
+
+
             mVideoName = itemView.findViewById(R.id.tv_feed_name);
             mStudentId = itemView.findViewById(R.id.tv_feed_id);
             picClickGood = itemView.findViewById(R.id.pic_click_good);
