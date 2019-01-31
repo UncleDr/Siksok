@@ -112,13 +112,14 @@ public class ViewPagerLayoutManager extends LinearLayoutManager {
         this.mOnViewPagerListener = listener;
     }
 
-    /*	A Listener interface that can be attached to a RecylcerView to get notified
-     *	whenever a ViewHolder is attached to or detached from RecyclerView.
+    /**
+     * A Listener interface that can be attached to a RecylcerView to get notified
+     * whenever a ViewHolder is attached to or detached from RecyclerView.
      */
     private RecyclerView.OnChildAttachStateChangeListener mChildAttachStateChangeListener = new RecyclerView.OnChildAttachStateChangeListener() {
 
         @Override
-        /*Called when a view is attached to the RecyclerView.*/
+        // Called when a view is attached to the RecyclerView.
         public void onChildViewAttachedToWindow(View view) {
             if (mOnViewPagerListener != null && getChildCount() == 1) {
                 mOnViewPagerListener.onInitComplete();
@@ -126,7 +127,7 @@ public class ViewPagerLayoutManager extends LinearLayoutManager {
         }
 
         @Override
-        /*Called when a view is detached to the RecyclerView.*/
+        //Called when a view is detached to the RecyclerView.
         public void onChildViewDetachedFromWindow(View view) {
             if (mDrift >= 0){
                 if (mOnViewPagerListener != null) mOnViewPagerListener.onPageRelease(true,getPosition(view));

@@ -233,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
         favoritesDatabase = favoritesDbHelper.getWritableDatabase();
     }
 
-    //Enter the favorite page.
+    /* Enter the favorite page. */
     public void enterFavorites(View view) {
         Intent intent = new Intent();
         intent.setClass(this, FavoritesActivity.class);
@@ -244,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void enterCustomCamera(View view) {
-        /* Apply all needy permission before enter the record page. */
+        // Apply all needy permission before enter the record page.
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, PERMISSION_RECORDVIDEO, REQUEST_PERMISSION_CODE);
