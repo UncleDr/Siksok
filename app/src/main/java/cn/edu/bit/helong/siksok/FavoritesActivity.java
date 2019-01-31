@@ -30,12 +30,7 @@ public class FavoritesActivity extends AppCompatActivity {
         GridLayoutManager layoutManager = new GridLayoutManager(this,3);
         rv.setLayoutManager(layoutManager);
         FavoritesAdapter favoritesAdapter = new FavoritesAdapter(favoritesDatabase);
-        favoritesAdapter.setFavoriteClickListener(new FavoritesAdapter.FavoriteClickListener() {
-            @Override
-            public void onFavoriteClick(View view) {
 
-            }
-        });
         rv.setAdapter(favoritesAdapter);
     }
 

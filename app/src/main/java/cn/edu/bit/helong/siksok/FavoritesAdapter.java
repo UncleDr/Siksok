@@ -28,9 +28,10 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.Favo
 
     SQLiteDatabase mFavoritesDatabase;
     List<Favorites> favoritesList = new ArrayList<>();
-    FavoriteClickListener mFavoriteClickListener;
+
 
     public FavoritesAdapter (SQLiteDatabase sqLiteDatabase) {
+        //Add all favorite video information to List<Favorites> in constructor.
         this.mFavoritesDatabase = sqLiteDatabase;
         String[] projection = {
                 BaseColumns._ID,
@@ -63,7 +64,6 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.Favo
                         name,
                         videoUrl,
                         imageUrl);
-//                Log.i(MainActivity.class.getSimpleName(), "content : " + note.getContent() + " priority: " + note.getPriorityLevel());
                 favoritesList.add(favorites);
             }
         }finally {
@@ -90,6 +90,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.Favo
 
         tv.setText(tmp.getNo() + "\n" + tmp.getName());
 
+        // Play video after clicking the video cover.
         iv.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent();
@@ -99,6 +100,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.Favo
             }
         });
 
+        // Delete a video data in database after a long click on a video cover.
         iv.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -112,26 +114,9 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.Favo
         });
     }
 
-    public void refresh(List<Favorites> newFavoerites) {
-        favoritesList.clear();
-        if (newFavoerites != null) {
-            favoritesList.addAll(newFavoerites);
-        }
-        notifyDataSetChanged();
-    }
-
-
     @Override
     public int getItemCount() {
         return favoritesList.size();
-    }
-
-    public interface FavoriteClickListener {
-        void onFavoriteClick(View view);
-    }
-
-    void setFavoriteClickListener (FavoriteClickListener listener) {
-        this.mFavoriteClickListener = listener;
     }
 
     public class FavoritesViewHolder extends RecyclerView.ViewHolder {

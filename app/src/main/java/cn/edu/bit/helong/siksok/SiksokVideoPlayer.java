@@ -3,7 +3,11 @@ import android.content.Context;
 import android.util.AttributeSet;
 
 import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
+import com.shuyu.gsyvideoplayer.video.base.GSYVideoControlView;
 
+/**
+ * This is a video player that can implement empty control play.
+ */
 public class SiksokVideoPlayer extends StandardGSYVideoPlayer {
 
     public SiksokVideoPlayer(Context context, Boolean fullFlag) {

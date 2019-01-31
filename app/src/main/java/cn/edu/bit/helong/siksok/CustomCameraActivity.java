@@ -78,7 +78,6 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
     private int RECORD_DURATION_TIME = 10000; //ms
     public float RED_DOT_START_ANGLE = (float)(3f/2*Math.PI);
     public float ARC_MID_X = 435 + 210 / 2, ARC_MID_Y = 1606 + 187 / 2,ARC_RADIUS ;
-//    Rect focusRect = calculateTapArea(event.getX(), event.getY(), 1f, viewWidth, viewHeight);
 
     private boolean isRecording = false;
 
@@ -110,15 +109,12 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
 
         mCamera = getCamera(CAMERA_TYPE);
         mSurfaceView = findViewById(R.id.img);
-//        mCamera = getCamera(CAMERA_TYPE);
         nowCameraFacing = Camera.CameraInfo.CAMERA_FACING_BACK;
         barPosting = findViewById(R.id.bar_posting);
         redDot = findViewById(R.id.red_dot);
 
-
         SurfaceHolder surfaceHolder = mSurfaceView.getHolder();
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-//        SurfaceHolder.Callback callback  = CustomCameraActivity.this;
         surfaceHolder.addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder surfaceHolder) {
@@ -141,6 +137,7 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
             public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
                 releaseMediaRecorder();
                 releaseCameraAndPreview();
+                Log.i("Destroyed","surfaceDestroyed");
             }
         });
 
@@ -153,10 +150,10 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
 
             if (isRecording) {
                 releaseMediaRecorder();
+                // Cancle the CountDownTimer if recording time is less than 10 senconds.
                 cdt.cancel();
-
+                // Edit video after finishing recording a video.
                 editVideo(myLatestVideo);
-
             } else {
                 mMediaRecorder = new MediaRecorder();//如果显示'this' is not available 则可能是在外部类中不可达的意思
 
@@ -178,17 +175,20 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
                     mMediaRecorder.start();
                     isRecording = true;
 
-                    //imgRecord的左上角坐标是(435.0,1606.0)
-                    //imgRecord的宽高是(210,187)
                     redDot.bringToFront();
+                    //Calculate the circle center coordinate and radius of the circular motion orbit of the red dot.
                     ARC_MID_X = imgRecord.getX() + imgRecord.getWidth() / 2;
                     ARC_MID_Y = imgRecord.getY() + imgRecord.getHeight() / 2;
                     ARC_RADIUS = (imgRecord.getHeight())/ 2f * 1.3f;
+
+                    //Calculate the coordinate of the start position of the red dot.
                     float RED_DOT_START_XY[] = calcRedDotStartPos(RED_DOT_START_ANGLE,ARC_MID_X,ARC_MID_Y,ARC_RADIUS);
+
+                    // Get the radius of the red dot.
                     float rRedDot = redDot.getHeight() / 2;
+
                     redDot.setX(RED_DOT_START_XY[0] - rRedDot);
                     redDot.setY(RED_DOT_START_XY[1] - rRedDot);
-
 
                     cdt = new CountDownTimer(RECORD_DURATION_TIME, 32) {//interval is 100ms
                         int times = 0;
@@ -196,21 +196,18 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
                         @Override
                         public void onTick(long millisUntilFinished) {
                             Log.i("perform click","perform click");
-//                            times++;
-                            //if(){
-                                XY = drawCircle((float)millisUntilFinished,ARC_RADIUS, ARC_MID_X, ARC_MID_Y,RECORD_DURATION_TIME,RED_DOT_START_ANGLE);//RED_DOT_START_ANGLE
-                                redDot.setX((float)XY[0] - rRedDot);
-                                redDot.setY((float)XY[1] - rRedDot);
-                                redDot.bringToFront();
-                                Log.i("redotxy", "X " + ((float)XY[0] - rRedDot) + "," + "Y " + ((float)XY[1] - rRedDot));
-//                                times = 0;
-//                            }
-
+                            /* Set the position of the red dot in every tick. */
+                            XY = drawCircle((float)millisUntilFinished,ARC_RADIUS, ARC_MID_X, ARC_MID_Y,RECORD_DURATION_TIME,RED_DOT_START_ANGLE);//RED_DOT_START_ANGLE
+                            redDot.setX((float)XY[0] - rRedDot);
+                            redDot.setY((float)XY[1] - rRedDot);
+                            redDot.bringToFront();
+                            Log.i("redotxy", "X " + ((float)XY[0] - rRedDot) + "," + "Y " + ((float)XY[1] - rRedDot));
                         }
                         @Override
                         public void onFinish() {
                             Log.i("total time", "total time is up");
                             if (isRecording) {
+                                /* Second click to end the recording. */
                                 imgRecord.performClick();
                                 Log.i("middlecoordinate", "中心坐标 " + imgRecord.getX() + "," + imgRecord.getY());
                             }
@@ -225,6 +222,7 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
             }
         });
 
+        //switch camera
         findViewById(R.id.img_facing).setOnClickListener(v -> {
             if(CAMERA_TYPE == Camera.CameraInfo.CAMERA_FACING_BACK){
                 mCamera = getCamera(Camera.CameraInfo.CAMERA_FACING_FRONT);
@@ -240,8 +238,10 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
             }
         });
 
+
         mSurfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
+            /* This method is called when touch event occurs. */
             public boolean onTouch(View v, MotionEvent event) {
                 String DEBUG_TAG = "mymotiondetected";
 
@@ -254,13 +254,16 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
                         focusOnTouch((int) event.getX(), (int) event.getY());
                         return true;
                     case (MotionEvent.ACTION_MOVE) :
+                        /**
+                         * Judge move direction of touch event
+                         * and decide to zoom in or zoom out.
+                         */
                         nowY = event.getY();
                         if(judgeDirection(nowY,lastY) == SCROLL_UP )
                             zoom(SCROLL_UP);
                         else if(judgeDirection(nowY, lastY) == SCROLL_DOWN)
                             zoom(SCROLL_DOWN);
                         lastY = nowY;
-                        //int x = (int )event.getX();
                         Log.d(DEBUG_TAG,"Action was MOVE");
                         return true;
                     case (MotionEvent.ACTION_UP) :
@@ -282,9 +285,14 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
         });
     }
 
-
+    /**
+     * Get the rectangle focus area.
+     * @param x The x coordinate of the event occured.
+     * @param y The y coordinate of the event occured.
+     */
     private void focusOnTouch(int x, int y) {
         Rect rect = new Rect(x - 100, y - 100, x + 100, y + 100);
+        /* Calculate and limit the focus area. */
         int left = rect.left * 2000 / mSurfaceView.getWidth() - 1000;
         int top = rect.top * 2000 / mSurfaceView.getHeight() - 1000;
         int right = rect.right * 2000 / mSurfaceView.getWidth() - 1000;
@@ -297,7 +305,10 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
         focusOnRect(new Rect(left, top, right, bottom));
     }
 
-
+    /**
+     * Sets focus area and weight and AutoFocusCallback.
+     * @param rect the bounds of the focus area.
+     */
     public void focusOnRect(Rect rect) {
 
         String TAG = "focusOnRect";
@@ -305,7 +316,7 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
             Camera.Parameters parameters = mCamera.getParameters(); // 先获取当前相机的参数配置对象
             parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO); // 设置聚焦模式
             Log.d(TAG, "parameters.getMaxNumFocusAreas() : " + parameters.getMaxNumFocusAreas());
-            if (parameters.getMaxNumFocusAreas() > 0) {
+            if (parameters.getMaxNumFocusAreas() > 0) {             //If the maximum number of focus areas is above zero.
                 List<Camera.Area> focusAreas = new ArrayList<Camera.Area>();
                 focusAreas.add(new Camera.Area(rect, 1000));
                 parameters.setFocusAreas(focusAreas);
@@ -316,7 +327,11 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
         }
     }
 
-
+    /**
+     * Creates a new Camera object to access a particular hardware camera.
+     * @param position the hardware camera to access.
+     * @return a new Camera object.
+     */
     public Camera getCamera(int position) {
         CAMERA_TYPE = position;
         if (mCamera != null) {
@@ -340,12 +355,18 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
     private static final int DEGREE_270 = 270;
     private static final int DEGREE_360 = 360;
 
+    /**
+     * Gets the angle camra image should rotate in order to
+     * fits the current screen orientation.
+     * @param cameraId the hardware camera to access.
+     * @return the angle camra image should rotate.
+     */
     private int getCameraDisplayOrientation(int cameraId) {
         android.hardware.Camera.CameraInfo info =
                 new android.hardware.Camera.CameraInfo();
         android.hardware.Camera.getCameraInfo(cameraId, info);
         int rotation = getWindowManager().getDefaultDisplay()
-                .getRotation();
+                .getRotation(); // Get the rotation of the screen from its "natural" orientation.
         int degrees = 0;
         switch (rotation) {
             case Surface.ROTATION_0:
@@ -366,8 +387,7 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
 
         int result;
         if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-            result = (info.orientation + degrees) % DEGREE_360;
-//            result = (DEGREE_360 - result) % DEGREE_360;  // compensate the mirror
+            result = (info.orientation + degrees) % DEGREE_360; // info.orientation means the orientation of the camera image.
         } else {  // back-facing
             result = (info.orientation - degrees + DEGREE_360) % DEGREE_360;
         }
@@ -405,65 +425,12 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
         isRecording = false;
     }
 
-    private Camera.PictureCallback mPicture = (data, camera) -> {
-        File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-        myLatestImage = pictureFile;
-        if (pictureFile == null) {
-            return;
-        }
-        try {
-            FileOutputStream fos = new FileOutputStream(pictureFile);
-            fos.write(data);
-            fos.close();
-        } catch (IOException e) {
-            Log.d("mPicture", "Error accessing file: " + e.getMessage());
-        }
-
-        try{
-            MediaStore.Images.Media.insertImage(getContentResolver(),BitmapFactory.decodeFile(myLatestImage.getAbsolutePath().toString()),myLatestImage.getName(),null);
-            Uri contentUri = Uri.fromFile(new File(myLatestImage.getAbsoluteFile().toString()));
-            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-            mediaScanIntent.setData(contentUri);
-            sendBroadcast(mediaScanIntent);
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-        mCamera.startPreview();
-    };
-
-    private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
-        final double ASPECT_TOLERANCE = 0.1;
-        double targetRatio = (double) h / w;
-
-        if (sizes == null) return null;
-
-        Camera.Size optimalSize = null;
-        double minDiff = Double.MAX_VALUE;
-
-        int targetHeight = Math.min(w, h);
-
-        for (Camera.Size size : sizes) {
-            double ratio = (double) size.width / size.height;
-            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
-            if (Math.abs(size.height - targetHeight) < minDiff) {
-                optimalSize = size;
-                minDiff = Math.abs(size.height - targetHeight);
-            }
-        }
-
-        if (optimalSize == null) {
-            minDiff = Double.MAX_VALUE;
-            for (Camera.Size size : sizes) {
-                if (Math.abs(size.height - targetHeight) < minDiff) {
-                    optimalSize = size;
-                    minDiff = Math.abs(size.height - targetHeight);
-                }
-            }
-        }
-        return optimalSize;
-    }
-
-
+    /**
+     * Judge the direction of move event.
+     * @param nowy the current Y coordinate of the move event.
+     * @param lasty the previous Y coordinate of the move event.
+     * @return the move direction of the move event.
+     */
     public int judgeDirection(float nowy, float lasty){
         if(nowy - lasty < 0)
             return SCROLL_UP;
@@ -473,12 +440,18 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
             return SCROLL_STILL;
     }
 
+    /**
+     * Zoom in or zoom out the image.
+     * @param direction the move direction of move event.
+     *                  It is used to decide whether to
+     *                  zoom in or zoom out.
+     */
     public void zoom(int direction){
         if(mCamera!=null) {
             Camera.Parameters parameter = mCamera.getParameters();
 
             if (parameter.isZoomSupported()) {
-                int MAX_ZOOM = parameter.getMaxZoom();
+                int MAX_ZOOM = parameter.getMaxZoom(); // get the max zoom value.
                 int currnetZoom = parameter.getZoom();
                 if(direction == SCROLL_UP) {
                     if (currnetZoom < MAX_ZOOM && currnetZoom >=0 ) {
@@ -499,41 +472,6 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
     }
 
 
-//    private static void handleFocus(MotionEvent event, Camera camera) {
-//        int viewWidth = getWidth();
-//        int viewHeight = getHeight();
-//        Rect focusRect = calculateTapArea(event.getX(), event.getY(), 1f, viewWidth, viewHeight);
-//
-//        camera.cancelAutoFocus();
-//        Camera.Parameters params = camera.getParameters();
-//        if (params.getMaxNumFocusAreas() > 0) {
-//            List<Camera.Area> focusAreas = new ArrayList<>();
-//            focusAreas.add(new Camera.Area(focusRect, 800));
-//            params.setFocusAreas(focusAreas);
-//        } else {
-//            Log.i(TAG, "focus areas not supported");
-//        }
-//        final String currentFocusMode = params.getFocusMode();
-//        params.setFocusMode(Camera.Parameters.FOCUS_MODE_MACRO);
-//        camera.setParameters(params);
-//
-//        camera.autoFocus(new Camera.AutoFocusCallback() {
-//            @Override
-//            public void onAutoFocus(boolean success, Camera camera) {
-//                Camera.Parameters params = camera.getParameters();
-//                params.setFocusMode(currentFocusMode);
-//                camera.setParameters(params);
-//            }
-//        });
-//    }
-
-
-
-    private static List<Camera.Area> buildMiddleArea(int areaPer1000) {
-        return Collections.singletonList(
-                new Camera.Area(new Rect(-areaPer1000, -areaPer1000, areaPer1000, areaPer1000), 1));
-    }
-
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         startPreview(holder);
@@ -553,9 +491,6 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
         Bitmap bmp = extractFrame(0);
         Uri uriBmp = Uri.parse(MediaStore.Images.Media.insertImage(getContentResolver(), bmp, null,null));
 
-//        File tmpImage = new File("/sdcard/DCIM/Camera/IMG_20190127_183651.jpg");
-//        File tmpImage = new File("/storage/emulated/0/DCIM/Camera/IMG_20190122_211543.jpg");
-//        File tmpVideo = new File("/storage/emulated/0/DCIM/Camera/VID_20190127_172830.mp4");
         Retrofit retrofit = RetrofitManager.get("http://10.108.10.39:8080");
 
         retrofit.create(IMiniDouyinService.class).postVideo("1120151026", "何龙",
@@ -580,6 +515,11 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
         barPosting.setVisibility(View.VISIBLE);
     }
 
+    /**
+     *
+     * @param timeMs
+     * @return
+     */
     public Bitmap extractFrame(long timeMs) {
         //第一个参数是传入时间，只能是us(微秒)
         //OPTION_CLOSEST ,在给定的时间，检索最近一个帧,这个帧不一定是关键帧。
@@ -587,7 +527,6 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
         //OPTION_NEXT_SYNC 在给定时间之后检索一个同步与数据源相关联的关键帧。
         //OPTION_PREVIOUS_SYNC 在给定时间之前检索一个同步与数据源相关联的关键帧。
 
-// Bitmap bitmap = mMetadataRetriever.getFrameAtTime(timeMs * 1000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
         MediaMetadataRetriever mMetadataRetriever = new MediaMetadataRetriever();
         mMetadataRetriever.setDataSource(myLatestVideo.getAbsolutePath());
         String w = mMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
@@ -598,6 +537,8 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
 
         Bitmap bitmap = null;
         for (long i = timeMs; i < fileLength; i += 1000) {
+            //finds a representative frame close to the given time position by
+            // considering the given option if possible, and returns it as a bitmap.
             bitmap = mMetadataRetriever.getFrameAtTime(i * 1000, MediaMetadataRetriever.OPTION_CLOSEST);//OPTION_CLOSEST_SYNC
             if (bitmap != null) {
                 break;
@@ -611,6 +552,19 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
         postVideo();
     }
 
+    /**
+     * Calculate the coordinate of the position of the red dot should be
+     * during its circular motion.
+     * @param t The amount of time until finished.
+     * @param R The radius of the circular motion.
+     * @param x The x coordinate of the circle center.
+     * @param y The y coordinate of the circle center.
+     * @param totalT The total time of countdown.
+     * @param startAngle The angle between the line from the
+     *                   coordinate origin to the start point
+     *                   of the red dot and the X axis.
+     * @return An array of one dimension which store current coordinate the red dot.
+     */
     public float[] drawCircle(float t, float R, float x, float y, float totalT, float startAngle){
         float twoPi = (float)Math.PI * 2;
         float angle =  t/totalT * twoPi + startAngle;
@@ -621,6 +575,17 @@ public class CustomCameraActivity extends AppCompatActivity  implements SurfaceH
         Log.i("angle", String.valueOf(angle));
         return coordinate;
     }
+
+    /**
+     * Calculate the red dot's start point coordinate.
+     * @param startAngle The angle between the line from the
+     *                   coordinate origin to the start point
+     *                   of the red dot and the X axis.
+     * @param midX The x coordinate of the circle center.
+     * @param midY The y coordinate of the circle center.
+     * @param R The radius of the circular motion.
+     * @return An array of one dimension which store the red dot's start point coordinate.
+     */
 
     public float[] calcRedDotStartPos(float startAngle, float midX, float midY, float R) {
         float[] XY = new float[2];

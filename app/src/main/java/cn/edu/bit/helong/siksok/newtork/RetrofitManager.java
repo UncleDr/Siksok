@@ -8,10 +8,6 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-/**
- * @author Xavier.S
- * @date 2019.01.17 18:02
- */
 public class RetrofitManager {
 
     static Map<String, Retrofit> sHostMap2Retrofit = new HashMap<>();

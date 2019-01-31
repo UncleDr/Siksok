@@ -111,12 +111,15 @@ public class MainActivity extends AppCompatActivity {
         ViewPagerLayoutManager manager = new ViewPagerLayoutManager(this, OrientationHelper.VERTICAL);
         manager.setOnViewPagerListener(new OnViewPagerListener() {
             @Override
+            //Play video when a view is attached to the RecyclerView
             public void onInitComplete() {
                 Log.e(TAG,"onInitComplete");
                 playVideo(0);
             }
 
             @Override
+
+            //Stop playing the playing video when a view is detached to the RecyclerView
             public void onPageRelease(boolean isNext,int position) {
                 Log.e(TAG,"释放位置:"+position +" 下一页:"+isNext);
                 int index = 0;
@@ -130,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            //Play video when the number of children in the ViewGroup is 1.
             public void onPageSelected(int position,boolean isBottom) {
                 Log.e(TAG,"选中位置:"+position+"  是否是滑动到底部:"+isBottom);
 
@@ -146,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            //Add the video information to database.
             public boolean AddToDB(Feed feed) {
                 try{
                     ContentValues values = new ContentValues();
@@ -165,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
         });
         mRv.setAdapter(feedsAdapter);
     }
+
 
     public void chooseImage() {
         Intent intent = new Intent(Intent.ACTION_PICK);
@@ -205,6 +211,9 @@ public class MainActivity extends AppCompatActivity {
         retrofit.create(IMiniDouyinService.class).fetchFeed().
                 enqueue(new Callback<FeedResponse>() {
                     @Override
+                    /*
+                     * Get the feeds and notify the adapter data has changed.
+                     */
                     public void onResponse(Call<FeedResponse> call, Response<FeedResponse> response) {
                         mFeeds = response.body().feeds;
                         ((FeedsAdapter)mRv.getAdapter()).setFeeds(mFeeds);
@@ -212,6 +221,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
+
                     public void onFailure(Call<FeedResponse> call, Throwable throwable) {
                         Toast.makeText(MainActivity.this, "fetch failed", Toast.LENGTH_SHORT).show();
                     }
@@ -223,6 +233,7 @@ public class MainActivity extends AppCompatActivity {
         favoritesDatabase = favoritesDbHelper.getWritableDatabase();
     }
 
+    //Enter the favorite page.
     public void enterFavorites(View view) {
         Intent intent = new Intent();
         intent.setClass(this, FavoritesActivity.class);
@@ -231,7 +242,9 @@ public class MainActivity extends AppCompatActivity {
 
     public int RECORD_REQUEST_CODE = 1;
 
+
     public void enterCustomCamera(View view) {
+        /* Apply all needy permission before enter the record page. */
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, PERMISSION_RECORDVIDEO, REQUEST_PERMISSION_CODE);
@@ -245,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case REQUEST_EXTERNAL_CAMERA: {
-
+                /* Enter the record page after getting all needy permission. */
                 if (grantResults.length > 0 &&
                         grantResults[0] == PackageManager.PERMISSION_GRANTED &&
                         grantResults[1] == PackageManager.PERMISSION_GRANTED &&

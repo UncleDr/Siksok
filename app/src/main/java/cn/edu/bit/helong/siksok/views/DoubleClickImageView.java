@@ -45,12 +45,6 @@ public class DoubleClickImageView extends AppCompatImageView {
         // event when double tap occurs
         @Override
         public boolean onDoubleTap(MotionEvent e) {
-//            float x = e.getX();
-//            float y = e.getY();
-//
-//            Log.d("Double Tap", "Tapped at: (" + x + "," + y + ")");
-//
-//            return true;
             mListener.onDoubleClick(DoubleClickImageView.this, (int)e.getX(), (int)e.getY());
             return true;
 

@@ -29,7 +29,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
     public SQLiteDatabase favoritesDatabase;
     public AddToFavoritesListener addToFavoritesListener;
 
-    //
+
      FeedsAdapter(Context context) {
         //mOnClickListener = listener;
         //List<Message> data,
@@ -97,9 +97,6 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
 
             @Override
             public void onSingleClick(View view) {
-//                Intent intent = new Intent(mContext, DetailPlayerActivity.class);
-//                intent.putExtra("videoUrl", videourl);
-//                mContext.startActivity(intent);
             }
 
         });
